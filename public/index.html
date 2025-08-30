@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mr Frank API Tester</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+    h1 { color: #333; }
+    input, button { padding: 10px; margin: 5px; }
+    pre { background: #111; color: #0f0; padding: 15px; border-radius: 8px; white-space: pre-wrap; }
+    .box { margin-top: 20px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <h1>🌐 Mr Frank API Hub</h1>
+  <div class="box">
+    <label>Endpoint: </label>
+    <input id="endpoint" placeholder="e.g. venice or ytmp3">
+    <br>
+    <label>Query / Prompt / URL: </label>
+    <input id="query" placeholder="Enter query (e.g. hi)">
+    <br>
+    <button onclick="callApi()">Send</button>
+  </div>
+
+  <div class="box">
+    <h2>Response:</h2>
+    <pre id="output">{ }</pre>
+  </div>
+
+  <script>
+    async function callApi() {
+      const endpoint = document.getElementById("endpoint").value.trim();
+      const query = document.getElementById("query").value.trim();
+      if (!endpoint) {
+        alert("Please enter an endpoint!");
+        return;
+      }
+
+      let url = `/${endpoint}`;
+      if (query) {
+        url += `?prompt=${encodeURIComponent(query)}&url=${encodeURIComponent(query)}`;
+      }
+
+      try {
+        const res = await fetch(url);
+        const json = await res.json();
+        document.getElementById("output").textContent = JSON.stringify(json, null, 2);
+      } catch (err) {
+        document.getElementById("output").textContent = "Error: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
