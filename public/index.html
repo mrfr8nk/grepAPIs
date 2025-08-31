@@ -1,54 +1,157 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Mr Frank API Tester</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>API Hub</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
-    h1 { color: #333; }
-    input, button { padding: 10px; margin: 5px; }
-    pre { background: #111; color: #0f0; padding: 15px; border-radius: 8px; white-space: pre-wrap; }
-    .box { margin-top: 20px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0a1a33, #112244);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2rem;
+      color: #fff;
+    }
+
+    h1 {
+      text-align: center;
+      width: 100%;
+      margin-bottom: 2rem;
+      font-size: 2rem;
+      letter-spacing: 1px;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    .card {
+      background: rgba(10, 20, 40, 0.65);
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .card h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.3rem;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .card label {
+      font-size: 0.9rem;
+      margin-bottom: 0.3rem;
+      color: #cfd8ff;
+    }
+
+    .card input {
+      padding: 0.6rem;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    .card button {
+      padding: 0.6rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    .card button:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .response {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #d4e2ff;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
-  <h1>🌐 Mr Frank API Hub</h1>
-  <div class="box">
-    <label>Endpoint: </label>
-    <input id="endpoint" placeholder="e.g. venice or ytmp3">
-    <br>
-    <label>Query / Prompt / URL: </label>
-    <input id="query" placeholder="Enter query (e.g. hi)">
-    <br>
-    <button onclick="callApi()">Send</button>
-  </div>
-
-  <div class="box">
-    <h2>Response:</h2>
-    <pre id="output">{ }</pre>
+  <div>
+    <h1>API Hub</h1>
+    <div class="container" id="apiContainer"></div>
   </div>
 
   <script>
-    async function callApi() {
-      const endpoint = document.getElementById("endpoint").value.trim();
-      const query = document.getElementById("query").value.trim();
-      if (!endpoint) {
-        alert("Please enter an endpoint!");
-        return;
-      }
+    // Example APIs config (in reality load from ./api folder or JSON)
+    const apis = [
+      { name: "Venice AI", url: "/api/ai/venice", method: "POST", input: "prompt" },
+      { name: "Weather", url: "/api/weather", method: "GET", input: "city" },
+    ];
 
-      let url = `/${endpoint}`;
-      if (query) {
-        url += `?prompt=${encodeURIComponent(query)}&url=${encodeURIComponent(query)}`;
-      }
+    const container = document.getElementById("apiContainer");
 
-      try {
-        const res = await fetch(url);
-        const json = await res.json();
-        document.getElementById("output").textContent = JSON.stringify(json, null, 2);
-      } catch (err) {
-        document.getElementById("output").textContent = "Error: " + err.message;
-      }
-    }
+    apis.forEach(api => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      card.innerHTML = `
+        <h2>${api.name}</h2>
+        <label for="${api.name}-input">${api.input}</label>
+        <input id="${api.name}-input" placeholder="Enter ${api.input}..."/>
+        <button>Send</button>
+        <div class="response"></div>
+      `;
+
+      const btn = card.querySelector("button");
+      const input = card.querySelector("input");
+      const responseDiv = card.querySelector(".response");
+
+      btn.addEventListener("click", async () => {
+        responseDiv.textContent = "Loading...";
+        try {
+          let res;
+          if (api.method === "POST") {
+            res = await fetch(api.url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ [api.input]: input.value })
+            });
+          } else {
+            res = await fetch(`${api.url}?${api.input}=${encodeURIComponent(input.value)}`);
+          }
+          const data = await res.json();
+          responseDiv.textContent = JSON.stringify(data, null, 2);
+        } catch (err) {
+          responseDiv.textContent = "Error: " + err.message;
+        }
+      });
+
+      container.appendChild(card);
+    });
   </script>
 </body>
 </html>
